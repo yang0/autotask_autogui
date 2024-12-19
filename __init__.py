@@ -1,7 +1,7 @@
 from .index import *
 import os
 
-# testa
+# test
 
 VERSION="1.0.8"
 GIT_URL="https://github.com/yang0/autotask_autogui"
