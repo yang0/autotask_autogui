@@ -6,44 +6,47 @@ import os
 import platform
 import pyperclip
 
+
 class RPANodeMeta(type):
     """RPA节点的元类，用于处理输入输出的合并"""
+
     def __new__(mcs, name, bases, attrs):
         # 如果不是基类，则合并输入输出
-        if name != 'BaseRPANode':
+        if name != "BaseRPANode":
             # 合并INPUTS
             base_inputs = {}
             for base in bases:
-                if hasattr(base, 'BASE_INPUTS'):
+                if hasattr(base, "BASE_INPUTS"):
                     base_inputs.update(base.BASE_INPUTS)
-            attrs['INPUTS'] = {**base_inputs, **attrs.get('INPUTS', {})}
+            attrs["INPUTS"] = {**base_inputs, **attrs.get("INPUTS", {})}
 
             # 合并OUTPUTS
             base_outputs = {}
             for base in bases:
-                if hasattr(base, 'BASE_OUTPUTS'):
+                if hasattr(base, "BASE_OUTPUTS"):
                     base_outputs.update(base.BASE_OUTPUTS)
-            attrs['OUTPUTS'] = {**base_outputs, **attrs.get('OUTPUTS', {})}
+            attrs["OUTPUTS"] = {**base_outputs, **attrs.get("OUTPUTS", {})}
 
         return super().__new__(mcs, name, bases, attrs)
 
+
 class BaseRPANode(Node, metaclass=RPANodeMeta):
     """RPA基础节点类，定义通用的输入输出"""
-    
+
     BASE_INPUTS = {
         "previous_result": {
             "label": "上一步结果",
             "description": "上一个节点的执行结果",
             "type": "DICT",
-            "required": False
+            "required": False,
         }
     }
-    
+
     BASE_OUTPUTS = {
         "result": {
             "label": "执行结果",
             "description": "当前节点的相关执行数据",
-            "type": "DICT"
+            "type": "DICT",
         },
     }
 
@@ -56,6 +59,7 @@ class BaseRPANode(Node, metaclass=RPANodeMeta):
         log = workflow_logger
         pass
 
+
 @register_node
 class MouseClickNode(BaseRPANode):
     NAME = "鼠标点击"
@@ -65,28 +69,27 @@ class MouseClickNode(BaseRPANode):
             "label": "X坐标",
             "description": "点击位置的X坐标",
             "type": "INT",
-            "required": True
+            "required": True,
         },
         "y": {
             "label": "Y坐标",
             "description": "点击位置的Y坐标",
             "type": "INT",
-            "required": True
+            "required": True,
         },
         "clicks": {
             "label": "点击次数",
             "description": "连续点击次数",
             "type": "INT",
-            "default": 1
+            "default": 1,
         },
         "interval": {
             "label": "点击间隔",
             "description": "多次点击时的间隔时间(秒)",
             "type": "FLOAT",
-            "default": 0.25
-        }
+            "default": 0.25,
+        },
     }
-    CATEGORY = "鼠键自动化"
 
     def execute(self, node_inputs: Dict[str, Any], workflow_logger) -> Dict[str, Any]:
         log = workflow_logger
@@ -98,7 +101,7 @@ class MouseClickNode(BaseRPANode):
                 return {
                     "success": False,
                     "error_message": "上一步执行失败，跳过当前节点",
-                    "execution_time": time.time() - start_time
+                    "execution_time": time.time() - start_time,
                 }
 
             x = node_inputs["x"]
@@ -108,14 +111,14 @@ class MouseClickNode(BaseRPANode):
                 x=x,
                 y=y,
                 clicks=node_inputs.get("clicks", 1),
-                interval=node_inputs.get("interval", 0.25)
+                interval=node_inputs.get("interval", 0.25),
             )
-            
+
             return {
                 "success": True,
                 "error_message": "",
                 "execution_time": time.time() - start_time,
-                "click_position": {"x": x, "y": y}
+                "click_position": {"x": x, "y": y},
             }
         except Exception as e:
             error_msg = f"鼠标点击失败: {str(e)}"
@@ -124,8 +127,9 @@ class MouseClickNode(BaseRPANode):
                 "success": False,
                 "error_message": error_msg,
                 "execution_time": time.time() - start_time,
-                "click_position": None
+                "click_position": None,
             }
+
 
 @register_node
 class ImageClickNode(BaseRPANode):
@@ -136,23 +140,22 @@ class ImageClickNode(BaseRPANode):
             "label": "图像路径",
             "description": "要查找的图像文件路径",
             "type": "IMAGEUPLOAD",
-            "required": True
+            "required": True,
         },
         "confidence": {
             "label": "匹配度",
             "description": "图像匹配的置信度(0-1)",
             "type": "FLOAT",
             "default": 0.8,
-            "step": 0.03
+            "step": 0.03,
         },
         "wait_time": {
             "label": "等待时间",
             "description": "等待图像出现的最长时间(秒)",
             "type": "FLOAT",
-            "default": 1.0
-        }
+            "default": 1.0,
+        },
     }
-    CATEGORY = "鼠键自动化"
 
     def execute(self, node_inputs: Dict[str, Any], workflow_logger) -> Dict[str, Any]:
         log = workflow_logger
@@ -166,13 +169,13 @@ class ImageClickNode(BaseRPANode):
                 return {
                     "success": False,
                     "error_message": "上一步执行失败，跳过当前节点",
-                    "execution_time": time.time() - start_time
+                    "execution_time": time.time() - start_time,
                 }
 
             # 添加图像文件验证
             image_path = node_inputs["target_img"]
             log.debug(f"尝试查找图像文件: {image_path}")
-            
+
             if not os.path.exists(image_path):
                 log.error(f"图像文件不存在: {image_path}")
                 return {
@@ -180,11 +183,11 @@ class ImageClickNode(BaseRPANode):
                     "error_message": f"图像文件不存在: {image_path}",
                     "execution_time": time.time() - start_time,
                     "image_found": False,
-                    "click_position": None
+                    "click_position": None,
                 }
 
             # 验证图像文件格式
-            valid_extensions = ('.png', '.jpg', '.jpeg', '.bmp')
+            valid_extensions = (".png", ".jpg", ".jpeg", ".bmp")
             if not image_path.lower().endswith(valid_extensions):
                 log.error(f"不支持的图像格式: {image_path}")
                 return {
@@ -192,26 +195,25 @@ class ImageClickNode(BaseRPANode):
                     "error_message": f"不支持的图像格式，请使用以下格式: {valid_extensions}",
                     "execution_time": time.time() - start_time,
                     "image_found": False,
-                    "click_position": None
+                    "click_position": None,
                 }
 
             wait_time = node_inputs.get("wait_time", 10)
             confidence = node_inputs.get("confidence", 0.9)
             log.debug(f"开始查找图像，等待时间: {wait_time}秒, 匹配度: {confidence}")
-            
+
             end_time = time.time() + wait_time
             attempts = 0
-            
+
             # 循环尝试查找图像，直到超时
             while time.time() < end_time:
                 attempts += 1
                 try:
                     log.debug(f"第 {attempts} 次尝试查找图像...")
                     location = pyautogui.locateCenterOnScreen(
-                        image_path,
-                        confidence=confidence
+                        image_path, confidence=confidence
                     )
-                    
+
                     if location:
                         log.info(f"找到图像，位置: x={location.x}, y={location.y}")
                         log.debug("执行点击操作...")
@@ -221,15 +223,15 @@ class ImageClickNode(BaseRPANode):
                             "error_message": "",
                             "execution_time": time.time() - start_time,
                             "image_found": True,
-                            "click_position": {"x": location.x, "y": location.y}
+                            "click_position": {"x": location.x, "y": location.y},
                         }
                 except Exception as e:
                     log.debug(f"单次查找失败: {str(e)}")
                     pass
-                    
+
                 # 短暂等待后继续尝试
                 time.sleep(0.5)
-            
+
             # 超时未找到图像
             log.warning(f"在 {wait_time} 秒内未找到目标图像，共尝试 {attempts} 次")
             return {
@@ -237,9 +239,9 @@ class ImageClickNode(BaseRPANode):
                 "error_message": f"未找到目标图像 (尝试次数: {attempts})",
                 "execution_time": time.time() - start_time,
                 "image_found": False,
-                "click_position": None
+                "click_position": None,
             }
-            
+
         except Exception as e:
             error_msg = f"图像识别点击失败: {str(e)}"
             log.error(error_msg)
@@ -248,8 +250,9 @@ class ImageClickNode(BaseRPANode):
                 "error_message": error_msg,
                 "execution_time": time.time() - start_time,
                 "image_found": False,
-                "click_position": None
+                "click_position": None,
             }
+
 
 @register_node
 class OpenApplicationNode(BaseRPANode):
@@ -260,16 +263,15 @@ class OpenApplicationNode(BaseRPANode):
             "label": "应用程序路径",
             "description": "要启动的应用程序完整路径",
             "type": "STRING",
-            "required": True
+            "required": True,
         },
         "wait_time": {
             "label": "等待时间",
             "description": "等待应用程序启动的时间(秒)",
             "type": "FLOAT",
-            "default": 2.0
-        }
+            "default": 2.0,
+        },
     }
-    CATEGORY = "鼠键自动化"
 
     def execute(self, node_inputs: Dict[str, Any], workflow_logger) -> Dict[str, Any]:
         log = workflow_logger
@@ -281,7 +283,7 @@ class OpenApplicationNode(BaseRPANode):
                 return {
                     "success": False,
                     "error_message": "上一步执行失败，跳过当前节点",
-                    "execution_time": time.time() - start_time
+                    "execution_time": time.time() - start_time,
                 }
 
             app_path = node_inputs["app_file"]
@@ -301,8 +303,8 @@ class OpenApplicationNode(BaseRPANode):
                 "execution_time": time.time() - start_time,
                 "process_info": {
                     "application_path": app_path,
-                    "start_time": start_time
-                }
+                    "start_time": start_time,
+                },
             }
 
         except Exception as e:
@@ -312,8 +314,9 @@ class OpenApplicationNode(BaseRPANode):
                 "success": False,
                 "error_message": error_msg,
                 "execution_time": time.time() - start_time,
-                "process_info": None
+                "process_info": None,
             }
+
 
 @register_node
 class TypeTextNode(BaseRPANode):
@@ -325,10 +328,9 @@ class TypeTextNode(BaseRPANode):
             "description": "要输入的文本内容",
             "type": "STRING",
             "multiline": True,
-            "required": True
+            "required": True,
         }
     }
-    CATEGORY = "鼠键自动化"
 
     def execute(self, node_inputs: Dict[str, Any], workflow_logger) -> Dict[str, Any]:
         log = workflow_logger
@@ -340,37 +342,34 @@ class TypeTextNode(BaseRPANode):
                 return {
                     "success": False,
                     "error_message": "上一步执行失败，跳过当前节点",
-                    "execution_time": time.time() - start_time
+                    "execution_time": time.time() - start_time,
                 }
 
             # 保存原有剪贴板内容
             original_clipboard = pyperclip.paste()
-            
+
             text = node_inputs["text"]
             log.debug(f"执行文本输入: {text}")
-            
+
             # 设置新文本到剪贴板
             pyperclip.copy(text)
-            
+
             # 执行粘贴操作
-            if platform.system() == 'Darwin':  # macOS
-                pyautogui.hotkey('command', 'v')
+            if platform.system() == "Darwin":  # macOS
+                pyautogui.hotkey("command", "v")
             else:  # Windows/Linux
-                pyautogui.hotkey('ctrl', 'v')
-            
+                pyautogui.hotkey("ctrl", "v")
+
             # 恢复原有剪贴板内容
             pyperclip.copy(original_clipboard)
-            
+
             return {
                 "success": True,
                 "error_message": "",
                 "execution_time": time.time() - start_time,
-                "text_info": {
-                    "content": text,
-                    "length": len(text)
-                }
+                "text_info": {"content": text, "length": len(text)},
             }
-            
+
         except Exception as e:
             error_msg = f"文本输入失败: {str(e)}"
             log.error(error_msg)
@@ -378,8 +377,9 @@ class TypeTextNode(BaseRPANode):
                 "success": False,
                 "error_message": error_msg,
                 "execution_time": time.time() - start_time,
-                "text_info": None
+                "text_info": None,
             }
+
 
 @register_node
 class KeyPressNode(BaseRPANode):
@@ -390,29 +390,28 @@ class KeyPressNode(BaseRPANode):
             "label": "按键",
             "description": "要按下的键(例如: enter, tab, a, b, 1等)",
             "type": "STRING",
-            "required": True
+            "required": True,
         },
         "modifiers": {
             "label": "组合键",
             "description": "组合键，多个用逗号分隔(例如: ctrl,alt,shift)",
             "type": "STRING",
             "required": False,
-            "default": ""
+            "default": "",
         },
         "presses": {
             "label": "按键次数",
             "description": "连续按键次数",
             "type": "INT",
-            "default": 1
+            "default": 1,
         },
         "interval": {
             "label": "按键间隔",
             "description": "多次按键时的间隔时间(秒)",
             "type": "FLOAT",
-            "default": 0.25
-        }
+            "default": 0.25,
+        },
     }
-    CATEGORY = "鼠键自动化"
 
     def execute(self, node_inputs: Dict[str, Any], workflow_logger) -> Dict[str, Any]:
         log = workflow_logger
@@ -424,17 +423,23 @@ class KeyPressNode(BaseRPANode):
                 return {
                     "success": False,
                     "error_message": "上一步执行失败，跳过当前节点",
-                    "execution_time": time.time() - start_time
+                    "execution_time": time.time() - start_time,
                 }
 
             key = node_inputs["key"]
             modifiers_str = node_inputs.get("modifiers", "").strip()
-            modifiers = [m.strip().lower() for m in modifiers_str.split(",")] if modifiers_str else []
+            modifiers = (
+                [m.strip().lower() for m in modifiers_str.split(",")]
+                if modifiers_str
+                else []
+            )
             presses = node_inputs.get("presses", 1)
             interval = node_inputs.get("interval", 0.25)
 
-            log.debug(f"执行按键操作: key={key}, modifiers={modifiers}, presses={presses}")
-            
+            log.debug(
+                f"执行按键操作: key={key}, modifiers={modifiers}, presses={presses}"
+            )
+
             # 如果有组合键
             if modifiers:
                 for _ in range(presses):
@@ -444,18 +449,14 @@ class KeyPressNode(BaseRPANode):
             else:
                 # 单个按键
                 pyautogui.press(key, presses=presses, interval=interval)
-            
+
             return {
                 "success": True,
                 "error_message": "",
                 "execution_time": time.time() - start_time,
-                "key_info": {
-                    "key": key,
-                    "modifiers": modifiers,
-                    "presses": presses
-                }
+                "key_info": {"key": key, "modifiers": modifiers, "presses": presses},
             }
-            
+
         except Exception as e:
             error_msg = f"按键操作失败: {str(e)}"
             log.error(error_msg)
@@ -463,5 +464,5 @@ class KeyPressNode(BaseRPANode):
                 "success": False,
                 "error_message": error_msg,
                 "execution_time": time.time() - start_time,
-                "key_info": None
+                "key_info": None,
             }
