@@ -5,7 +5,7 @@ import time
 import os
 import platform
 import pyperclip
-
+import traceback
 
 class RPANodeMeta(type):
     """RPA节点的元类，用于处理输入输出的合并"""
@@ -37,7 +37,7 @@ class BaseRPANode(Node, metaclass=RPANodeMeta):
         "previous_result": {
             "label": "上一步结果",
             "description": "上一个节点的执行结果",
-            "type": "DICT",
+            "type": "",
             "required": False,
         }
     }
@@ -46,7 +46,7 @@ class BaseRPANode(Node, metaclass=RPANodeMeta):
         "result": {
             "label": "执行结果",
             "description": "当前节点的相关执行数据",
-            "type": "DICT",
+            "type": "",
         },
     }
 
@@ -218,13 +218,14 @@ class ImageClickNode(BaseRPANode):
                         log.info(f"找到图像，位置: x={location.x}, y={location.y}")
                         log.debug("执行点击操作...")
                         pyautogui.click(location)
-                        return {
-                            "success": True,
-                            "error_message": "",
-                            "execution_time": time.time() - start_time,
-                            "image_found": True,
-                            "click_position": {"x": location.x, "y": location.y},
-                        }
+                        return {"result": True}
+                        # return {
+                        #     "success": True,
+                        #     "error_message": "",
+                        #     "execution_time": time.time() - start_time,
+                        #     "image_found": True,
+                        #     "click_position": {"x": location.x, "y": location.y},
+                        # }
                 except Exception as e:
                     log.debug(f"单次查找失败: {str(e)}")
                     pass
@@ -234,24 +235,20 @@ class ImageClickNode(BaseRPANode):
 
             # 超时未找到图像
             log.warning(f"在 {wait_time} 秒内未找到目标图像，共尝试 {attempts} 次")
-            return {
-                "success": False,
-                "error_message": f"未找到目标图像 (尝试次数: {attempts})",
-                "execution_time": time.time() - start_time,
-                "image_found": False,
-                "click_position": None,
-            }
+            return {"result": False}
+            # return {
+            #     "success": False,
+            #     "error_message": f"未找到目标图像 (尝试次数: {attempts})",
+            #     "execution_time": time.time() - start_time,
+            #     "image_found": False,
+            #     "click_position": None,
+            # }
 
         except Exception as e:
             error_msg = f"图像识别点击失败: {str(e)}"
             log.error(error_msg)
-            return {
-                "success": False,
-                "error_message": error_msg,
-                "execution_time": time.time() - start_time,
-                "image_found": False,
-                "click_position": None,
-            }
+            # 返回False
+            return {"result": False}
 
 
 @register_node
@@ -277,6 +274,7 @@ class OpenApplicationNode(BaseRPANode):
         log = workflow_logger
         start_time = time.time()
         try:
+            workflow_logger.info(f"开始执行打开应用程序: {node_inputs}")
             # 检查上一步是否成功
             previous_result = node_inputs.get("previous_result", {})
             if previous_result and not previous_result.get("success", True):
@@ -288,6 +286,8 @@ class OpenApplicationNode(BaseRPANode):
 
             app_path = node_inputs["app_file"]
             wait_time = node_inputs.get("wait_time", 3)
+            
+            workflow_logger.info(f"开始执行打开应用程序: {app_path}")
 
             # 检查文件是否存在
             if not os.path.exists(app_path):
@@ -309,7 +309,8 @@ class OpenApplicationNode(BaseRPANode):
 
         except Exception as e:
             error_msg = f"启动应用程序失败: {str(e)}"
-            log.error(error_msg)
+            log.error(error_msg, exc_info=True)
+            log.error(f"开始执行打开应用程序: {traceback.format_exc()}")
             return {
                 "success": False,
                 "error_message": error_msg,
