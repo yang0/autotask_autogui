@@ -4,9 +4,9 @@ import os
 
 # testa啊
 
-VERSION = "1.0.37"
+VERSION = "1.0.38"
 GIT_URL="https://github.com/yang0/autotask_autogui"
-NAME="自动化鼠标键盘操作啊"
+NAME="自动化鼠标键盘操作"
 DESCRIPTION="""桌面自动化(RPA)插件
 sadf
 asdf
