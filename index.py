@@ -134,7 +134,7 @@ class MouseClickNode(BaseRPANode):
 @register_node
 class ImageClickNode(BaseRPANode):
     NAME = "图像识别点击"
-    DESCRIPTION = "查找并点击指定图像"
+    DESCRIPTION = "查找并点击指定图像。"
     INPUTS = {
         "target_img": {
             "label": "图像路径",
