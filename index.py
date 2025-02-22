@@ -91,7 +91,7 @@ class MouseClickNode(BaseRPANode):
         },
     }
 
-    def execute(self, node_inputs: Dict[str, Any], workflow_logger) -> Dict[str, Any]:
+    async def execute(self, node_inputs: Dict[str, Any], workflow_logger) -> Dict[str, Any]:
         log = workflow_logger
         start_time = time.time()
         try:
@@ -157,7 +157,7 @@ class ImageClickNode(BaseRPANode):
         },
     }
 
-    def execute(self, node_inputs: Dict[str, Any], workflow_logger) -> Dict[str, Any]:
+    async def execute(self, node_inputs: Dict[str, Any], workflow_logger) -> Dict[str, Any]:
         log = workflow_logger
         start_time = time.time()
         try:
@@ -270,7 +270,7 @@ class OpenApplicationNode(BaseRPANode):
         },
     }
 
-    def execute(self, node_inputs: Dict[str, Any], workflow_logger) -> Dict[str, Any]:
+    async def execute(self, node_inputs: Dict[str, Any], workflow_logger) -> Dict[str, Any]:
         log = workflow_logger
         start_time = time.time()
         try:
@@ -333,7 +333,7 @@ class TypeTextNode(BaseRPANode):
         }
     }
 
-    def execute(self, node_inputs: Dict[str, Any], workflow_logger) -> Dict[str, Any]:
+    async def execute(self, node_inputs: Dict[str, Any], workflow_logger) -> Dict[str, Any]:
         log = workflow_logger
         start_time = time.time()
         try:
@@ -414,7 +414,7 @@ class KeyPressNode(BaseRPANode):
         },
     }
 
-    def execute(self, node_inputs: Dict[str, Any], workflow_logger) -> Dict[str, Any]:
+    async def execute(self, node_inputs: Dict[str, Any], workflow_logger) -> Dict[str, Any]:
         log = workflow_logger
         start_time = time.time()
         try:

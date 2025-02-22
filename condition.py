@@ -30,7 +30,7 @@ class ConditionNode(ConditionalNode):
         }
     }
 
-    def execute(self, node_inputs: Dict[str, Any], workflow_logger) -> Dict[str, Any]:
+    async def execute(self, node_inputs: Dict[str, Any], workflow_logger) -> Dict[str, Any]:
         try:
             value = node_inputs.get("value")
             workflow_logger.debug(f"条件判断输入值: {value}")
